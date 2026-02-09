@@ -18,11 +18,11 @@ import Combine
 
 @MainActor // Ensures all property updates happen on the UI thread
 class CompressionViewModel: ObservableObject {
+    var targetMB = MainViewModel.instance.options!.targetMB;
     @Published var progressPass1: Double = 0.0
     @Published var progressPass2: Double = 0.0
     @Published var isCompressing: Bool = false
     @Published var isFinished: Bool = false
-    @Published var consoleOutput: String = "" // For debugging
     
     func compress(video: ChoosenVideo) {
         self.isCompressing = true
@@ -39,18 +39,20 @@ class CompressionViewModel: ObservableObject {
             
             // Environment Setup
             var env = ProcessInfo.processInfo.environment
-            // Ensure ffmpeg/ffprobe can be found. Add other paths if needed.
+
             env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\(env["PATH"] ?? "")"
             process.environment = env
             
             // Command Setup
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-            // Assuming the script is in the same folder, otherwise use Bundle.main.path or absolute path
-            // Note: In a real app, you might want to Bundle the script resource
+
+            let filePath = video.path.path(percentEncoded: false)
             let scriptPath = "./compress"
             
-            process.currentDirectoryPath = "/Users/nixuge/Documents/Records" 
-            process.arguments = ["-c", "\(scriptPath) \"\(video.path.lastPathComponent)\""]
+            let launchArgs = "\(scriptPath) \"\(filePath)\" \"\(await self.targetMB)\""
+            debugPrint("Launch args: \(launchArgs)")
+            process.currentDirectoryPath = "/Users/nixuge/Documents/Records"
+            process.arguments = ["-c", launchArgs]
             
             // Handle Data Reading
             let outputHandle = pipe.fileHandleForReading
@@ -65,9 +67,8 @@ class CompressionViewModel: ObservableObject {
                 
                 // Update UI on Main Actor
                 Task { @MainActor in
-                    self.consoleOutput += output // Optional: keep logs
+                    print("\(output)")
                     
-                    // Parse line by line
                     output.enumerateLines { line, _ in
                         if let match = progressRegex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) {
                             let passRange = Range(match.range(at: 1), in: line)!

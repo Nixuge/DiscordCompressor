@@ -7,7 +7,38 @@
 
 import SwiftUI
 
-@MainActor // Ensures all property updates happen on the UI thread
+enum AppState {
+    case idle
+    case options
+    case compressing
+}
+
+struct CompressingOptions {
+    var targetMB: Int
+}
+
+@MainActor
 class MainViewModel: ObservableObject {
+    static var instance = MainViewModel()
     
+    @Published var state: AppState = .idle
+    @Published var video: ChoosenVideo?
+    var options: CompressingOptions?
+    
+    func reset() {
+        state = .idle
+        video = nil
+        options = nil
+    }
+    
+    func progressState() {
+        switch state {
+        case .idle:
+            state = .options;
+        case .options:
+            state = .compressing;
+        case .compressing:
+            self.reset()
+        }
+    }
 }

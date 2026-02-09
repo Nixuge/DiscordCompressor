@@ -47,9 +47,9 @@ struct CompressingView: View {
             
             Spacer()
             
-            if fileExists(f) {
+            if vm.isFinished {
                 Button(action: backHome) {
-                    Text("Done !")
+                    Text("Compressed to \(getPathWithMBURL(video: video!, mb: vm.targetMB).fileSizeString)")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundStyle(.green)
