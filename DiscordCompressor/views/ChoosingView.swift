@@ -28,8 +28,13 @@ struct ChoosingView: View {
                         
                         Text(latestVideo!.path.lastPathComponent)
                         
-                        Button(action: compressLatest) {
-                            Text("Use latest recording")
+                        HStack {
+                            Button(action: updateLatestVideo) {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                            Button(action: compressLatest) {
+                                Text("Use latest recording")
+                            }
                         }
                         
  
@@ -90,8 +95,12 @@ struct ChoosingView: View {
 //        .frame(width: 300, height: 600, alignment: .center)
         
         .onAppear {
-            self.latestVideo = getLatestVideo();
+            updateLatestVideo()
         }
+    }
+    
+    func updateLatestVideo() {
+        self.latestVideo = getLatestVideo();
     }
     
     func compressCurrent() {
